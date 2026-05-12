@@ -1,11 +1,21 @@
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import type { Design } from '@open-codesign/shared';
+import { normalizePathSeparators } from '@open-codesign/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDesign, initInMemoryDb, updateDesignWorkspace } from './snapshots-db';
 import { registerSnapshotsIpc, registerWorkspaceIpc } from './snapshots-ipc';
 import { withStableWorkspacePath } from './workspace-path-lock';
 import type { WorkspaceFileEntry } from './workspace-reader';
+
+function expectPathEqual(actual: string, expected: string): void {
+  const normalizedActual = normalizePathSeparators(actual);
+  const normalizedExpected = normalizePathSeparators(expected);
+  expect(normalizedActual, `Expected paths to be equal after normalization`).toBe(
+    normalizedExpected,
+  );
+}
 
 type Handler = (event: unknown, raw: unknown) => unknown;
 
@@ -58,7 +68,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 
 vi.mock('./electron-runtime', () => ({
   app: {
-    getPath: vi.fn(() => '/tmp/open-codesign-tests'),
+    getPath: vi.fn(() => path.join(os.tmpdir(), 'open-codesign-tests')),
   },
   dialog: {
     showOpenDialog: vi.fn(),
@@ -91,7 +101,7 @@ async function exists(p: string): Promise<boolean> {
 }
 
 describe('workspace files IPC during auto-managed workspace renames', () => {
-  const documentsRoot = '/tmp/open-codesign-tests';
+  const documentsRoot = path.join(os.tmpdir(), 'open-codesign-tests');
   const defaultWorkspaceRoot = path.join(documentsRoot, 'CoDesign');
   let root: string;
 
@@ -142,7 +152,11 @@ describe('workspace files IPC during auto-managed workspace renames', () => {
     renameControl.release();
     const [updated, files] = await Promise.all([renamePromise, listPromise]);
 
-    expect(updated.workspacePath).toBe(path.join(root, 'General-Agent-Benchmark-Deck'));
+    expect(updated.workspacePath).toBeTruthy();
+    expectPathEqual(
+      updated.workspacePath as string,
+      path.join(root, 'General-Agent-Benchmark-Deck'),
+    );
     expect(files.map((file) => file.path)).toContain('App.jsx');
   });
 
@@ -188,7 +202,8 @@ describe('workspace files IPC during auto-managed workspace renames', () => {
     const updated = await renamePromise;
     await generationLease;
 
-    expect(updated.workspacePath).toBe(newWorkspace);
+    expect(updated.workspacePath).toBeTruthy();
+    expectPathEqual(updated.workspacePath as string, newWorkspace);
     await expect(exists(oldWorkspace)).resolves.toBe(false);
     await expect(exists(path.join(newWorkspace, 'App.jsx'))).resolves.toBe(true);
   });

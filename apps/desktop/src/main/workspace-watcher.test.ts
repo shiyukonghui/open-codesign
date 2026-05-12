@@ -1,6 +1,7 @@
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { normalizePathSeparators } from '@open-codesign/shared';
 import { describe, expect, it, vi } from 'vitest';
 
 const handlers = new Map<string, (e: unknown, raw: unknown) => unknown>();
@@ -84,7 +85,7 @@ function captureError(fn: () => unknown): unknown {
 }
 
 function tempWorkspace(name: string): string {
-  return path.join(tmpdir(), name).replaceAll('\\', '/');
+  return normalizePathSeparators(path.join(tmpdir(), name));
 }
 
 describe('files-watcher subscribe / unsubscribe', () => {

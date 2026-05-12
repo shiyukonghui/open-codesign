@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { normalizePathSeparators } from '@open-codesign/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDesign, getDesign, initInMemoryDb, updateDesignWorkspace } from './snapshots-db';
 import {
@@ -8,6 +9,14 @@ import {
   isAutoManagedWorkspacePath,
   renameAutoManagedWorkspaceForDesign,
 } from './snapshots-ipc';
+
+function expectPathEqual(actual: string, expected: string): void {
+  const normalizedActual = normalizePathSeparators(actual);
+  const normalizedExpected = normalizePathSeparators(expected);
+  expect(normalizedActual, `Expected paths to be equal after normalization`).toBe(
+    normalizedExpected,
+  );
+}
 
 vi.mock('./electron-runtime', () => ({
   app: {
@@ -80,8 +89,11 @@ describe('auto-managed workspace naming', () => {
     });
 
     const expected = path.join(root, 'Studio-Loop-Welcome-Email');
-    expect(updated?.workspacePath).toBe(expected);
-    expect(getDesign(db, design.id)?.workspacePath).toBe(expected);
+    expect(updated?.workspacePath).toBeDefined();
+    expectPathEqual(updated?.workspacePath, expected);
+    const designRecord = getDesign(db, design.id);
+    expect(designRecord?.workspacePath).toBeDefined();
+    expectPathEqual(designRecord?.workspacePath, expected);
     await expect(exists(oldWorkspace)).resolves.toBe(false);
     await expect(exists(path.join(expected, 'App.jsx'))).resolves.toBe(true);
   });
@@ -101,7 +113,8 @@ describe('auto-managed workspace naming', () => {
       defaultRoot: root,
     });
 
-    expect(updated?.workspacePath).toBe(path.join(root, 'Studio-Loop-Welcome-Email-1'));
+    expect(updated?.workspacePath).toBeDefined();
+    expectPathEqual(updated?.workspacePath, path.join(root, 'Studio-Loop-Welcome-Email-1'));
   });
 
   it('leaves user-chosen workspaces alone', async () => {
@@ -119,7 +132,9 @@ describe('auto-managed workspace naming', () => {
       });
 
       expect(updated).toBeNull();
-      expect(getDesign(db, design.id)?.workspacePath).toBe(userWorkspace);
+      const designRecord2 = getDesign(db, design.id);
+      expect(designRecord2?.workspacePath).toBeDefined();
+      expectPathEqual(designRecord2?.workspacePath, userWorkspace);
       await expect(exists(userWorkspace)).resolves.toBe(true);
     } finally {
       await rm(userWorkspace, { recursive: true, force: true });

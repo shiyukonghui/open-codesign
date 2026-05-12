@@ -361,6 +361,7 @@ export { ERROR_CODE_DESCRIPTIONS, ERROR_CODES } from './error-codes';
 // from this barrel — it's main-process only. Import from
 // '@open-codesign/shared/fingerprint' directly.
 export type { FingerprintInput } from './fingerprint';
+export { normalizePathSeparators, pathsEqual } from './path-utils';
 export type { ProxyPresetId } from './proxy-presets';
 export {
   getPresetById,
