@@ -329,11 +329,7 @@ export function AddCustomProviderModal({
         </Field>
 
         <Field label={t('settings.providers.custom.name')}>
-          <TextInput
-            value={name}
-            onChange={setName}
-            placeholder="My Provider"
-          />
+          <TextInput value={name} onChange={setName} placeholder="My Provider" />
         </Field>
 
         <Field label={t('settings.providers.custom.baseUrl')}>
@@ -347,9 +343,7 @@ export function AddCustomProviderModal({
               <AlertCircle className="w-3.5 h-3.5 text-[var(--color-warning)]" />
               <span>{t('settings.providers.custom.compatibilityHintTitle')}</span>
             </div>
-            <p className="mt-1 leading-5">
-              {t('settings.providers.custom.compatibilityHintBody')}
-            </p>
+            <p className="mt-1 leading-5">{t('settings.providers.custom.compatibilityHintBody')}</p>
           </div>
           <label className="mt-2 flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-border-subtle)] px-3 py-2 text-[var(--text-xs)] text-[var(--color-text-secondary)]">
             <input
