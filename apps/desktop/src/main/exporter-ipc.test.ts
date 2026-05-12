@@ -64,9 +64,9 @@ describe('parseRequest', () => {
     expect(result.sourcePath).toBe('screens/home/index.html');
     const assetOptions = exportAssetOptions(result);
     expect(assetOptions.assetRootPath).toBeDefined();
-    expect(normalizePathSeparators(assetOptions.assetRootPath)).toContain('/workspace');
+    expect(normalizePathSeparators(assetOptions.assetRootPath!)).toContain('/workspace');
     expect(assetOptions.assetBasePath).toBeDefined();
-    expect(normalizePathSeparators(assetOptions.assetBasePath)).toContain(
+    expect(normalizePathSeparators(assetOptions.assetBasePath!)).toContain(
       '/workspace/screens/home',
     );
   });
@@ -106,7 +106,7 @@ describe('parseRequest', () => {
     expect(result.sourcePath).toBe('screens/home/App.jsx');
     const assetOptions2 = exportAssetOptions(result);
     expect(assetOptions2.assetBasePath).toBeDefined();
-    expect(normalizePathSeparators(assetOptions2.assetBasePath)).toContain(
+    expect(normalizePathSeparators(assetOptions2.assetBasePath!)).toContain(
       '/workspace/screens/home',
     );
     expect(assetOptions2.sourcePath).toBe('screens/home/App.jsx');

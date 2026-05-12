@@ -90,10 +90,10 @@ describe('auto-managed workspace naming', () => {
 
     const expected = path.join(root, 'Studio-Loop-Welcome-Email');
     expect(updated?.workspacePath).toBeDefined();
-    expectPathEqual(updated?.workspacePath, expected);
+    expectPathEqual(updated!.workspacePath!, expected);
     const designRecord = getDesign(db, design.id);
     expect(designRecord?.workspacePath).toBeDefined();
-    expectPathEqual(designRecord?.workspacePath, expected);
+    expectPathEqual(designRecord!.workspacePath!, expected);
     await expect(exists(oldWorkspace)).resolves.toBe(false);
     await expect(exists(path.join(expected, 'App.jsx'))).resolves.toBe(true);
   });
@@ -114,7 +114,7 @@ describe('auto-managed workspace naming', () => {
     });
 
     expect(updated?.workspacePath).toBeDefined();
-    expectPathEqual(updated?.workspacePath, path.join(root, 'Studio-Loop-Welcome-Email-1'));
+    expectPathEqual(updated!.workspacePath!, path.join(root, 'Studio-Loop-Welcome-Email-1'));
   });
 
   it('leaves user-chosen workspaces alone', async () => {
@@ -134,7 +134,7 @@ describe('auto-managed workspace naming', () => {
       expect(updated).toBeNull();
       const designRecord2 = getDesign(db, design.id);
       expect(designRecord2?.workspacePath).toBeDefined();
-      expectPathEqual(designRecord2?.workspacePath, userWorkspace);
+      expectPathEqual(designRecord2!.workspacePath!, userWorkspace);
       await expect(exists(userWorkspace)).resolves.toBe(true);
     } finally {
       await rm(userWorkspace, { recursive: true, force: true });
