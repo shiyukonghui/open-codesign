@@ -37,17 +37,14 @@ describe('done runtime verifier error formatting', () => {
   });
 
   it('allows only the verifier file for file:// requests', () => {
-    const verifyFilePath = join(tmpdir(), 'codesign-done', 'verify.html');
-    expect(isDoneVerifierRequestAllowed(pathToFileURL(verifyFilePath).href, verifyFilePath)).toBe(
-      true,
-    );
-    expect(
-      isDoneVerifierRequestAllowed(
-        pathToFileURL(join(tmpdir(), 'private.txt')).href,
-        verifyFilePath,
-      ),
-    ).toBe(false);
-    expect(isDoneVerifierRequestAllowed('https://fonts.googleapis.com/css2', verifyFilePath)).toBe(
+    const verifyPath = join(tmpdir(), 'codesign-done', 'verify.html');
+    const verifyUrl = pathToFileURL(verifyPath).href;
+    const otherPath = join(tmpdir(), 'private.txt');
+    const otherUrl = pathToFileURL(otherPath).href;
+
+    expect(isDoneVerifierRequestAllowed(verifyUrl, verifyPath)).toBe(true);
+    expect(isDoneVerifierRequestAllowed(otherUrl, verifyPath)).toBe(false);
+    expect(isDoneVerifierRequestAllowed('https://fonts.googleapis.com/css2', verifyPath)).toBe(
       true,
     );
   });

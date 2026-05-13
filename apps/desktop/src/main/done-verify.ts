@@ -21,6 +21,7 @@ import { fileURLToPath, pathToFileURL, URL } from 'node:url';
 import type { DoneError, DoneRuntimeVerifier } from '@open-codesign/core';
 import { findSystemChrome } from '@open-codesign/exporters';
 import { buildSrcdoc } from '@open-codesign/runtime';
+import { pathsEqual } from '@open-codesign/shared';
 import type { Browser, ConsoleMessage, HTTPRequest, Page } from 'puppeteer-core';
 
 const VERIFY_LOAD_TIMEOUT_MS = 15_000;
@@ -69,7 +70,7 @@ export function isDoneVerifierRequestAllowed(rawUrl: string, verifyFilePath: str
       return true;
     case 'file:':
       try {
-        return fileURLToPath(url) === verifyFilePath;
+        return pathsEqual(fileURLToPath(url), verifyFilePath);
       } catch {
         return false;
       }

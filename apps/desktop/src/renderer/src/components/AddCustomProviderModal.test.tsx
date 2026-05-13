@@ -17,7 +17,7 @@ describe('AddCustomProviderModal', () => {
     expect(html).toContain('settings.providers.custom.allowPrivateNetwork');
   });
 
-  it('hides the compatibility warning when editing a locked builtin endpoint', () => {
+  it('shows the compatibility warning when editing a builtin endpoint', () => {
     const html = renderToStaticMarkup(
       <AddCustomProviderModal
         onSave={() => undefined}
@@ -29,13 +29,12 @@ describe('AddCustomProviderModal', () => {
           wire: 'anthropic',
           defaultModel: 'claude-sonnet-4-5',
           builtin: true,
-          lockEndpoint: true,
         }}
       />,
     );
 
-    expect(html).not.toContain('settings.providers.custom.compatibilityHintTitle');
-    expect(html).not.toContain('settings.providers.custom.compatibilityHintBody');
+    expect(html).toContain('settings.providers.custom.compatibilityHintTitle');
+    expect(html).toContain('settings.providers.custom.compatibilityHintBody');
   });
 
   it('builds endpoint discovery payloads from the latest private-network opt-in value', () => {

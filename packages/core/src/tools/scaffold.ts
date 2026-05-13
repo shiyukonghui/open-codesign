@@ -1,7 +1,11 @@
 import { lstat, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { AgentTool, AgentToolResult } from '@mariozechner/pi-agent-core';
-import { normalizeLegacyEditmodeBlock } from '@open-codesign/shared';
+import {
+  normalizeLegacyEditmodeBlock,
+  normalizePathSeparators,
+  pathsEqual,
+} from '@open-codesign/shared';
 import { Type } from '@sinclair/typebox';
 
 /**
@@ -175,12 +179,12 @@ export interface ScaffoldResult {
 }
 
 function destinationPathForSource(destPath: string, sourcePath: string): string {
-  const normalizedDestPath = destPath.replace(/\\/g, '/');
   const sourceExt = path.extname(sourcePath);
-  if (sourceExt.length === 0) return normalizedDestPath;
-  const parsed = path.posix.parse(normalizedDestPath);
-  if (parsed.ext.toLowerCase() === sourceExt.toLowerCase()) return normalizedDestPath;
-  return path.posix.join(parsed.dir, `${parsed.name}${sourceExt}`);
+  if (sourceExt.length === 0) return normalizePathSeparators(destPath);
+  const parsed = path.parse(destPath);
+  if (parsed.ext.toLowerCase() === sourceExt.toLowerCase())
+    return normalizePathSeparators(destPath);
+  return normalizePathSeparators(path.join(parsed.dir, `${parsed.name}${sourceExt}`));
 }
 
 export async function runScaffold(req: ScaffoldRequest): Promise<ScaffoldResult> {
@@ -241,7 +245,7 @@ export async function runScaffold(req: ScaffoldRequest): Promise<ScaffoldResult>
   return {
     ok: true,
     destPath: actualDestPath,
-    ...(actualDestPath !== req.destPath ? { requestedDestPath: req.destPath } : {}),
+    ...(!pathsEqual(actualDestPath, req.destPath) ? { requestedDestPath: req.destPath } : {}),
     written: dest,
     bytes: Buffer.byteLength(contents, 'utf8'),
     ...(normalizedEditmode ? { normalizedEditmode } : {}),

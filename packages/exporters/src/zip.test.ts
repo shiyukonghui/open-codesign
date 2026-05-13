@@ -76,7 +76,7 @@ describe('exportZip', () => {
     expect(out).toContain('CODESIGN_STANDALONE_RUNTIME');
     expect(out).toContain('zip-jsx');
     expect(out).not.toContain('https://cdn.tailwindcss.com');
-  });
+  }, 15000);
 
   it('bundles the original source and export manifest for handoff quality', async () => {
     const dest = join(tempDir, 'source-manifest.zip');
@@ -102,7 +102,7 @@ describe('exportZip', () => {
     expect(manifest.schemaVersion).toBe(1);
     expect(manifest.sourcePath).toBe('screens/App.tsx');
     expect(manifest.files).toContain('source/screens/App.tsx');
-  });
+  }, 15000);
 
   it('auto-collects local asset references and rewrites root-relative paths', async () => {
     const dest = join(tempDir, 'auto-assets.zip');

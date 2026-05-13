@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
@@ -7,6 +8,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type {
   Design,
@@ -85,12 +87,20 @@ export function safeInitSnapshotsDb(
   }
 }
 
+const MEMORY_DB_SENTINEL = '<memory>';
+
+export function isMemoryDb(db: Database): boolean {
+  return db.dataDir === MEMORY_DB_SENTINEL;
+}
+
 export function initInMemoryDb(): Database {
+  const memorySessionDir = path.join(tmpdir(), `codesign-memory-session-${crypto.randomUUID()}`);
+  mkdirSync(memorySessionDir, { recursive: true });
   return {
     kind: 'json-design-store',
-    dataDir: ':memory:',
-    storePath: ':memory:',
-    sessionDir: ':memory:/sessions',
+    dataDir: MEMORY_DB_SENTINEL,
+    storePath: MEMORY_DB_SENTINEL,
+    sessionDir: memorySessionDir,
     memoryData: emptyStore(),
     close: () => {},
   };

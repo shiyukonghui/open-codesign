@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { normalizePathSeparators } from '@open-codesign/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createDesign,
@@ -76,7 +77,7 @@ describe('normalizeWorkspacePath', () => {
     const normalized = normalizeWorkspacePath(absolute);
 
     expect(path.isAbsolute(normalized)).toBe(true);
-    expect(normalized).toBe(path.normalize(absolute).replaceAll('\\', '/').replace(/\/+$/, ''));
+    expect(normalized).toBe(normalizePathSeparators(path.normalize(absolute)).replace(/\/+$/, ''));
     expect(normalized.endsWith('/')).toBe(false);
   });
 

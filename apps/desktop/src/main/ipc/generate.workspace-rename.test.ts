@@ -2,7 +2,16 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type { Design } from '@open-codesign/shared';
+import { normalizePathSeparators } from '@open-codesign/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+function expectPathEqual(actual: string, expected: string): void {
+  const normalizedActual = normalizePathSeparators(actual);
+  const normalizedExpected = normalizePathSeparators(expected);
+  expect(normalizedActual, `Expected paths to be equal after normalization`).toBe(
+    normalizedExpected,
+  );
+}
 
 type Handler = (event: unknown, raw: unknown) => unknown;
 
@@ -200,7 +209,6 @@ import { requestAsk } from '../ask-ipc';
 import { appendSessionChatMessage } from '../session-chat';
 import { createDesign, initInMemoryDb, updateDesignWorkspace } from '../snapshots-db';
 import { registerSnapshotsIpc } from '../snapshots-ipc';
-import { normalizeWorkspacePath } from '../workspace-path';
 import { registerGenerateIpc } from './generate';
 
 function getHandler(channel: string): Handler {
@@ -283,8 +291,10 @@ describe('generate IPC workspace rename coordination', () => {
     }
 
     const renamed = await renamePromise;
-    expect(renamed.workspacePath).toBe(
-      normalizeWorkspacePath(path.join(defaultWorkspaceRoot, 'Hybrid-Workshop-Day-Agenda')),
+    expect(renamed.workspacePath).toBeTruthy();
+    expectPathEqual(
+      renamed.workspacePath as string,
+      path.join(defaultWorkspaceRoot, 'Hybrid-Workshop-Day-Agenda'),
     );
   });
 

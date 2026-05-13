@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,7 +11,7 @@ const handlers = vi.hoisted(() => new Map<string, Handler>());
 
 vi.mock('./electron-runtime', () => ({
   app: {
-    getPath: vi.fn(() => '/tmp/open-codesign-tests'),
+    getPath: vi.fn(() => path.join(tmpdir(), 'open-codesign-tests')),
   },
   dialog: {
     showOpenDialog: vi.fn(),
@@ -52,9 +52,11 @@ describe('workspace files IPC legacy workspace fallback', () => {
   it('returns an empty file list when the bound workspace folder is missing', async () => {
     const db = initInMemoryDb();
     const design = createDesign(db, 'Missing workspace folder');
-    const missingWorkspace = path.join(tmpdir(), 'open-codesign-missing-workspace-for-list');
-    await rm(missingWorkspace, { recursive: true, force: true });
-    updateDesignWorkspace(db, design.id, missingWorkspace);
+    updateDesignWorkspace(
+      db,
+      design.id,
+      path.join(tmpdir(), 'open-codesign-missing-workspace-for-list'),
+    );
     registerWorkspaceIpc(db, () => null);
 
     const list = getHandler('codesign:files:v1:list');

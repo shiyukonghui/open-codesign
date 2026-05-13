@@ -21,7 +21,13 @@ import {
   DesignRunPreferencesV1 as DesignRunPreferencesV1Schema,
 } from '@open-codesign/shared';
 import { compactToolResultForHistory } from './ipc/tool-log';
-import { type Database, getDesign, listSnapshots, touchDesignActivity } from './snapshots-db';
+import {
+  type Database,
+  getDesign,
+  isMemoryDb,
+  listSnapshots,
+  touchDesignActivity,
+} from './snapshots-db';
 import { normalizeWorkspacePath } from './workspace-path';
 
 export const CHAT_MESSAGE_CUSTOM_TYPE = 'open-codesign.chat.message';
@@ -133,11 +139,14 @@ function openSession(opts: SessionChatStoreOptions, designId: string): SessionMa
   return SessionManager.open(file, opts.sessionDir, resolveSessionCwd(opts, designId));
 }
 
-function flushSession(manager: SessionManager): void {
+function flushSession(manager: SessionManager, db: Database): void {
   const file = manager.getSessionFile();
   const header = manager.getHeader();
   if (file === undefined || header === null) {
     throw new CodesignError('Session file unavailable', 'IPC_DB_ERROR');
+  }
+  if (isMemoryDb(db)) {
+    return;
   }
   // pi defers writing user-only sessions; desktop chat must persist immediately.
   mkdirSync(path.dirname(file), { recursive: true });
@@ -382,7 +391,7 @@ function appendCommentEvent(
   const manager = openSession(opts, designId);
   const entryId = manager.appendCustomEntry(COMMENT_CUSTOM_TYPE, event);
   const entry = manager.getEntry(entryId);
-  flushSession(manager);
+  flushSession(manager, opts.db);
   const createdAt = entry?.timestamp ?? new Date().toISOString();
   touchDesignActivity(opts.db, designId, createdAt);
 }
@@ -478,7 +487,7 @@ export function appendSessionChatMessage(
   };
   const entryId = manager.appendCustomEntry(CHAT_MESSAGE_CUSTOM_TYPE, stored);
   const entry = manager.getEntry(entryId);
-  flushSession(manager);
+  flushSession(manager, opts.db);
   const createdAt = entry?.timestamp ?? new Date().toISOString();
   if (options.touchActivity !== false) {
     touchDesignActivity(opts.db, input.designId, createdAt);
@@ -520,7 +529,7 @@ export function appendSessionToolStatus(
   };
   const entryId = manager.appendCustomEntry(CHAT_TOOL_STATUS_CUSTOM_TYPE, stored);
   const entry = manager.getEntry(entryId);
-  flushSession(manager);
+  flushSession(manager, opts.db);
   touchDesignActivity(opts.db, input.designId, entry?.timestamp ?? new Date().toISOString());
 }
 
@@ -550,7 +559,7 @@ export function appendSessionDesignBrief(
   const manager = openSession(opts, designId);
   const stored: StoredDesignBrief = { schemaVersion: 1, brief };
   manager.appendCustomEntry(CONTEXT_BRIEF_CUSTOM_TYPE, stored);
-  flushSession(manager);
+  flushSession(manager, opts.db);
 }
 
 export function readSessionRunPreferences(
@@ -580,7 +589,7 @@ export function appendSessionRunPreferences(
   const manager = openSession(opts, designId);
   const stored: StoredRunPreferences = { schemaVersion: 1, preferences: parsed };
   manager.appendCustomEntry(RUN_PREFERENCES_CUSTOM_TYPE, stored);
-  flushSession(manager);
+  flushSession(manager, opts.db);
 }
 
 export function seedSessionChatFromSnapshots(

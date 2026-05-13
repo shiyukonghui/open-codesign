@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { normalizePathSeparators } from '@open-codesign/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listScaffoldKinds, loadScaffoldManifest, makeScaffoldTool, runScaffold } from './scaffold';
 
@@ -84,7 +85,12 @@ describe('scaffold tool', () => {
         scaffoldsRoot,
       });
       expect(result.ok).toBe(true);
-      expect(result.written?.startsWith(wsroot)).toBe(true);
+      expect(result.written).toBeDefined();
+      expect(
+        normalizePathSeparators(result.written as string).startsWith(
+          normalizePathSeparators(wsroot),
+        ),
+      ).toBe(true);
       expect(result.bytes).toBeGreaterThan(0);
     } finally {
       rmSync(wsroot, { recursive: true, force: true });
@@ -368,7 +374,12 @@ export const Demo = () => null;
         kind?: string;
       };
       expect(details.ok).toBe(true);
-      expect(details.written?.startsWith(wsroot)).toBe(true);
+      expect(details.written).toBeDefined();
+      expect(
+        normalizePathSeparators(details.written as string).startsWith(
+          normalizePathSeparators(wsroot),
+        ),
+      ).toBe(true);
       expect(details.bytes).toBeGreaterThan(0);
       expect(details.kind).toBe('demo-frame');
       expect((details as { destPath?: string }).destPath).toBe('out.jsx');

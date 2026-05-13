@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { AuthStorage } from '@mariozechner/pi-coding-agent';
+import { normalizePathSeparators } from '@open-codesign/shared';
 import { describe, expect, it } from 'vitest';
 import { createCodesignSession } from './agent-session.js';
 
@@ -17,7 +18,9 @@ describe('createCodesignSession', () => {
         permissionHook: async () => ({ allow: true }),
       });
       expect(handle.session).toBeDefined();
-      expect(handle.sessionFile.startsWith(sessionDir)).toBe(true);
+      expect(
+        normalizePathSeparators(handle.sessionFile).startsWith(normalizePathSeparators(sessionDir)),
+      ).toBe(true);
       expect(handle.sessionFile.endsWith('.jsonl')).toBe(true);
     } finally {
       rmSync(cwd, { recursive: true, force: true });

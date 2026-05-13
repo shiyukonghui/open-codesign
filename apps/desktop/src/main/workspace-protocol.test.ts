@@ -1,6 +1,7 @@
 import { mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { normalizePathSeparators } from '@open-codesign/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resolveWorkspaceSafePath, resolveWorkspaceUrl } from './workspace-protocol';
 
@@ -71,7 +72,11 @@ describe('resolveWorkspaceUrl', () => {
     expect(traversal.ok).toBe(true);
     if (traversal.ok) {
       expect(traversal.value.relPath).toBe('etc/passwd.html');
-      expect(traversal.value.absPath.startsWith(workspaceDir)).toBe(true);
+      expect(
+        normalizePathSeparators(traversal.value.absPath).startsWith(
+          normalizePathSeparators(workspaceDir),
+        ),
+      ).toBe(true);
     }
   });
 

@@ -32,9 +32,6 @@ interface Props {
     wire: WireApi;
     defaultModel: string;
     builtin: boolean;
-    /** When true, lock baseUrl/wire so users can't accidentally break a
-     *  builtin. Builtins still allow API key + defaultModel edits. */
-    lockEndpoint: boolean;
     /** Display mask of existing key (e.g. "sk-ant-***xyz9") — shown as
      *  placeholder so user knows there's a stored key, and an empty submit
      *  doesn't wipe it. */
@@ -102,7 +99,6 @@ export function AddCustomProviderModal({
 }: Props) {
   const t = useT();
   const isEdit = editTarget !== undefined;
-  const lockEndpoint = editTarget?.lockEndpoint === true;
   const [name, setName] = useState(editTarget?.name ?? initialValues?.name ?? '');
   const [baseUrl, setBaseUrl] = useState(editTarget?.baseUrl ?? initialValues?.baseUrl ?? '');
   const [apiKey, setApiKey] = useState('');
@@ -233,12 +229,10 @@ export function AddCustomProviderModal({
         if (defaultModel.trim() !== editTarget.defaultModel) {
           update.defaultModel = defaultModel.trim();
         }
-        if (!lockEndpoint) {
-          if (baseUrl.trim() !== editTarget.baseUrl) {
-            update.baseUrl = canonicalBaseUrl(baseUrl.trim(), wire);
-          }
-          if (wire !== editTarget.wire) update.wire = wire;
+        if (baseUrl.trim() !== editTarget.baseUrl) {
+          update.baseUrl = canonicalBaseUrl(baseUrl.trim(), wire);
         }
+        if (wire !== editTarget.wire) update.wire = wire;
         const typedKey = apiKey.trim();
         if (typedKey.length > 0) update.apiKey = typedKey;
         await window.codesign.config.updateProvider(update);
@@ -311,38 +305,31 @@ export function AddCustomProviderModal({
           </button>
         </div>
 
-        {!lockEndpoint && (
-          <Field label={t('settings.providers.custom.wire')}>
-            <div className="flex gap-3 flex-wrap">
-              {(['openai-chat', 'openai-responses', 'anthropic'] as const).map((w) => (
-                <label
-                  key={w}
-                  className="inline-flex items-center gap-1.5 text-[var(--text-xs)] cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    name="wire"
-                    value={w}
-                    checked={wire === w}
-                    onChange={() => handleWireChange(w)}
-                    className="accent-[var(--color-accent)]"
-                  />
-                  <span className="text-[var(--color-text-secondary)]">
-                    {t(`settings.providers.custom.wires.${w}`)}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </Field>
-        )}
+        <Field label={t('settings.providers.custom.wire')}>
+          <div className="flex gap-3 flex-wrap">
+            {(['openai-chat', 'openai-responses', 'anthropic'] as const).map((w) => (
+              <label
+                key={w}
+                className="inline-flex items-center gap-1.5 text-[var(--text-xs)] cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name="wire"
+                  value={w}
+                  checked={wire === w}
+                  onChange={() => handleWireChange(w)}
+                  className="accent-[var(--color-accent)]"
+                />
+                <span className="text-[var(--color-text-secondary)]">
+                  {t(`settings.providers.custom.wires.${w}`)}
+                </span>
+              </label>
+            ))}
+          </div>
+        </Field>
 
         <Field label={t('settings.providers.custom.name')}>
-          <TextInput
-            value={name}
-            onChange={setName}
-            placeholder="My Provider"
-            disabled={lockEndpoint}
-          />
+          <TextInput value={name} onChange={setName} placeholder="My Provider" />
         </Field>
 
         <Field label={t('settings.providers.custom.baseUrl')}>
@@ -350,40 +337,33 @@ export function AddCustomProviderModal({
             value={baseUrl}
             onChange={handleBaseUrlChange}
             placeholder="https://api.example.com/v1"
-            disabled={lockEndpoint}
           />
-          {!lockEndpoint && (
-            <div className="mt-2 rounded-[var(--radius-md)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-3 py-2 text-[var(--text-xs)] text-[var(--color-text-secondary)]">
-              <div className="flex items-center gap-1.5 font-medium text-[var(--color-text-primary)]">
-                <AlertCircle className="w-3.5 h-3.5 text-[var(--color-warning)]" />
-                <span>{t('settings.providers.custom.compatibilityHintTitle')}</span>
-              </div>
-              <p className="mt-1 leading-5">
-                {t('settings.providers.custom.compatibilityHintBody')}
-              </p>
+          <div className="mt-2 rounded-[var(--radius-md)] border border-[var(--color-warning)] bg-[var(--color-warning-soft)] px-3 py-2 text-[var(--text-xs)] text-[var(--color-text-secondary)]">
+            <div className="flex items-center gap-1.5 font-medium text-[var(--color-text-primary)]">
+              <AlertCircle className="w-3.5 h-3.5 text-[var(--color-warning)]" />
+              <span>{t('settings.providers.custom.compatibilityHintTitle')}</span>
             </div>
-          )}
-          {!lockEndpoint && (
-            <label className="mt-2 flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-border-subtle)] px-3 py-2 text-[var(--text-xs)] text-[var(--color-text-secondary)]">
-              <input
-                type="checkbox"
-                checked={allowPrivateNetwork}
-                onChange={(e) => {
-                  const nextAllowPrivateNetwork = e.target.checked;
-                  setAllowPrivateNetwork(nextAllowPrivateNetwork);
-                  setTest({ kind: 'idle' });
-                  scheduleDiscovery(baseUrl, wire, nextAllowPrivateNetwork);
-                }}
-                className="mt-0.5 accent-[var(--color-accent)]"
-              />
-              <span>
-                {t('settings.providers.custom.allowPrivateNetwork', {
-                  defaultValue:
-                    'Allow testing local or private-network provider URLs from this computer',
-                })}
-              </span>
-            </label>
-          )}
+            <p className="mt-1 leading-5">{t('settings.providers.custom.compatibilityHintBody')}</p>
+          </div>
+          <label className="mt-2 flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-border-subtle)] px-3 py-2 text-[var(--text-xs)] text-[var(--color-text-secondary)]">
+            <input
+              type="checkbox"
+              checked={allowPrivateNetwork}
+              onChange={(e) => {
+                const nextAllowPrivateNetwork = e.target.checked;
+                setAllowPrivateNetwork(nextAllowPrivateNetwork);
+                setTest({ kind: 'idle' });
+                scheduleDiscovery(baseUrl, wire, nextAllowPrivateNetwork);
+              }}
+              className="mt-0.5 accent-[var(--color-accent)]"
+            />
+            <span>
+              {t('settings.providers.custom.allowPrivateNetwork', {
+                defaultValue:
+                  'Allow testing local or private-network provider URLs from this computer',
+              })}
+            </span>
+          </label>
         </Field>
 
         <Field label={t('settings.providers.custom.apiKey')}>

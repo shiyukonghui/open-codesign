@@ -770,7 +770,6 @@ export function ModelsTab() {
             wire: editingRow.wire,
             defaultModel: editingRow.defaultModel,
             builtin: editingRow.builtin,
-            lockEndpoint: editingRow.builtin,
             ...(editingRow.maskedKey.length > 0 ? { keyMask: editingRow.maskedKey } : {}),
           }}
           initialSetAsActive={false}
