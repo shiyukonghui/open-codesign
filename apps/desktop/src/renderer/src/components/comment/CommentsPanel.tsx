@@ -39,12 +39,13 @@ export function CommentsPanel() {
     return () => clearTimeout(to);
   }, [active]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only set initial position once
   useEffect(() => {
     if (mounted && !commentsPanelPosition && nodeRef.current) {
       const rect = nodeRef.current.getBoundingClientRect();
       setCommentsPanelPosition({ x: rect.left, y: rect.top });
     }
-  }, [mounted, commentsPanelPosition, setCommentsPanelPosition]);
+  }, [mounted, setCommentsPanelPosition]);
 
   if (!mounted) return null;
   if (typeof document === 'undefined') return null;
