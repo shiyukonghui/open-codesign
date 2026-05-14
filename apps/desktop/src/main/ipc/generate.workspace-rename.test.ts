@@ -277,6 +277,7 @@ describe('generate IPC workspace rename coordination', () => {
         schemaVersion: 1,
         id: design.id,
         name: 'Hybrid Workshop Day Agenda',
+        renameWorkspace: false,
       }) as Promise<Design>,
     ).finally(() => {
       renameSettled = true;
@@ -291,11 +292,8 @@ describe('generate IPC workspace rename coordination', () => {
     }
 
     const renamed = await renamePromise;
-    expect(renamed.workspacePath).toBeTruthy();
-    expectPathEqual(
-      renamed.workspacePath as string,
-      path.join(defaultWorkspaceRoot, 'Hybrid-Workshop-Day-Agenda'),
-    );
+    expect(renamed.name).toBe('Hybrid Workshop Day Agenda');
+    expectPathEqual(renamed.workspacePath as string, oldWorkspace);
   });
 
   it('runs semantic router preflight ask before generateViaAgent', async () => {

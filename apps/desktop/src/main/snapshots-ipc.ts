@@ -1327,17 +1327,17 @@ export function registerSnapshotsIpc(db: Database): void {
       const designId = r['id'] as string;
       const name = r['name'] as string;
       const renameWorkspace = parseRenameWorkspaceOption(r);
-      return await runWithWorkspaceRenameQueue(designId, async () => {
-        const before = runDb('rename-design.lookup', () => getDesign(db, designId));
-        if (before === null) {
-          throw new CodesignError('Design not found', 'IPC_NOT_FOUND');
-        }
-        const updated = runDb('rename-design', () => renameDesign(db, designId, name));
-        if (updated === null) {
-          throw new CodesignError('Design not found', 'IPC_NOT_FOUND');
-        }
-        let finalDesign = updated;
-        if (renameWorkspace) {
+      if (renameWorkspace) {
+        return await runWithWorkspaceRenameQueue(designId, async () => {
+          const before = runDb('rename-design.lookup', () => getDesign(db, designId));
+          if (before === null) {
+            throw new CodesignError('Design not found', 'IPC_NOT_FOUND');
+          }
+          const updated = runDb('rename-design', () => renameDesign(db, designId, name));
+          if (updated === null) {
+            throw new CodesignError('Design not found', 'IPC_NOT_FOUND');
+          }
+          let finalDesign = updated;
           try {
             finalDesign =
               (await renameAutoManagedWorkspaceForDesign({
@@ -1353,14 +1353,28 @@ export function registerSnapshotsIpc(db: Database): void {
               error: err instanceof Error ? err.message : String(err),
             });
           }
-        }
-        logger.info('design.renamed', {
-          id: finalDesign.id,
-          name: finalDesign.name,
-          workspacePath: finalDesign.workspacePath,
+          logger.info('design.renamed', {
+            id: finalDesign.id,
+            name: finalDesign.name,
+            workspacePath: finalDesign.workspacePath,
+          });
+          return finalDesign;
         });
-        return finalDesign;
+      }
+      const before = runDb('rename-design.lookup', () => getDesign(db, designId));
+      if (before === null) {
+        throw new CodesignError('Design not found', 'IPC_NOT_FOUND');
+      }
+      const updated = runDb('rename-design', () => renameDesign(db, designId, name));
+      if (updated === null) {
+        throw new CodesignError('Design not found', 'IPC_NOT_FOUND');
+      }
+      logger.info('design.renamed', {
+        id: updated.id,
+        name: updated.name,
+        workspacePath: updated.workspacePath,
       });
+      return updated;
     },
   );
 
