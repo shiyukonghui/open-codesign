@@ -861,6 +861,7 @@
       "empty": "还没有评论。在画布上点击元素留下评论。",
       "delete": "删除评论",
       "untitled": "（无内容）",
+      "dragHandle": "拖动移动面板",
       "status": {
         "pending": "待处理",
         "applied": "已应用"

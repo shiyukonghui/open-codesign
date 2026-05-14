@@ -16,6 +16,7 @@ interface CommentsSliceActions {
   updateComment: CodesignState['updateComment'];
   submitComment: CodesignState['submitComment'];
   removeComment: CodesignState['removeComment'];
+  setCommentsPanelPosition: CodesignState['setCommentsPanelPosition'];
 }
 
 export function makeCommentsSlice(set: SetState, get: GetState): CommentsSliceActions {
@@ -180,6 +181,10 @@ export function makeCommentsSlice(set: SetState, get: GetState): CommentsSliceAc
           description: msg,
         });
       }
+    },
+
+    setCommentsPanelPosition(position) {
+      set({ commentsPanelPosition: position });
     },
   };
 }

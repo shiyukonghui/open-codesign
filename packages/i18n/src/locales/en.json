@@ -861,6 +861,7 @@
       "empty": "No comments yet. Click any element on the canvas to leave one.",
       "delete": "Delete comment",
       "untitled": "(no text)",
+      "dragHandle": "Drag to move panel",
       "status": {
         "pending": "Pending",
         "applied": "Applied"

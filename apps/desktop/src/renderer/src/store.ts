@@ -204,6 +204,9 @@ export interface CodesignState {
    *  prefer this over the stored rect when present. Unscaled — callers
    *  apply zoom themselves. */
   liveRects: Record<string, CommentRect>;
+  /** Draggable position of the comments panel, relative to its default
+   *  CSS position (top-right). Null means reset to default. */
+  commentsPanelPosition: { x: number; y: number } | null;
 
   // Workstream G — canvas file tabs
   canvasTabs: CanvasTab[];
@@ -424,6 +427,8 @@ export interface CodesignState {
   /** Reset live rects — call on design/snapshot switch to avoid stale
    *  overlays pointing at the previous iframe's layout. */
   clearLiveRects: () => void;
+  /** Persist the comments panel position so it can be restored on remount. */
+  setCommentsPanelPosition: (position: { x: number; y: number } | null) => void;
 
   // Workstream G — canvas file tabs
   openCanvasFileTab: (path: string) => void;
@@ -488,6 +493,7 @@ export const useCodesignStore = create<CodesignState>((set, get) => ({
   commentBubble: null,
   currentSnapshotId: null,
   liveRects: {},
+  commentsPanelPosition: null,
 
   canvasTabs: DEFAULT_CANVAS_TABS,
   activeCanvasTab: 0,

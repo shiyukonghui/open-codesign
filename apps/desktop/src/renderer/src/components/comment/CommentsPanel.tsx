@@ -1,8 +1,10 @@
 import { useT } from '@open-codesign/i18n';
 import type { CommentRow } from '@open-codesign/shared';
-import { Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { GripVertical, Trash2, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import type { DraggableData, DraggableEvent } from 'react-draggable';
+import Draggable from 'react-draggable';
 import { useCodesignStore } from '../../store';
 
 export function CommentsPanel() {
@@ -15,10 +17,16 @@ export function CommentsPanel() {
   const setInteractionMode = useCodesignStore((s) => s.setInteractionMode);
   const openCommentBubble = useCodesignStore((s) => s.openCommentBubble);
   const removeComment = useCodesignStore((s) => s.removeComment);
+  const commentsPanelPosition = useCodesignStore((s) => s.commentsPanelPosition);
+  const setCommentsPanelPosition = useCodesignStore((s) => s.setCommentsPanelPosition);
+
+  const nodeRef = useRef<HTMLDivElement>(null);
 
   const active = interactionMode === 'comment' && currentDesignId !== null;
   const [mounted, setMounted] = useState(active);
   const [visible, setVisible] = useState(false);
+
+  const currentPosition = commentsPanelPosition ?? { x: 0, y: 0 };
 
   useEffect(() => {
     if (active) {
@@ -60,60 +68,77 @@ export function CommentsPanel() {
     });
   }
 
-  return createPortal(
-    <aside
-      aria-label={t('comments.panel.title', { count: visibleComments.length })}
-      style={{
-        transform: visible ? 'translateX(0)' : 'translateX(calc(100% + 24px))',
-        opacity: visible ? 1 : 0,
-        transition: 'transform 200ms ease-out, opacity 200ms ease-out',
-      }}
-      className="fixed top-[80px] right-[16px] z-40 w-[300px] flex flex-col rounded-[14px] border border-[var(--color-border-muted)] bg-[var(--color-surface-elevated)] shadow-[0_12px_40px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)] max-h-[calc(100vh-120px)] overflow-hidden"
-    >
-      {/* Header */}
-      <header className="flex items-center justify-between px-[16px] py-[12px] border-b border-[var(--color-border-muted)]">
-        <div className="flex items-baseline gap-[6px]">
-          <span className="text-[13px] font-medium text-[var(--color-text-primary)]">
-            {t('comments.panel.title', { count: visibleComments.length })}
-          </span>
-          <span
-            className="text-[11px] tabular-nums text-[var(--color-text-muted)]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
-            {visibleComments.length}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => setInteractionMode('default')}
-          aria-label={t('comments.panel.close')}
-          className="rounded-full p-[3px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
-        >
-          <X className="w-[14px] h-[14px]" aria-hidden />
-        </button>
-      </header>
+  function handleDragStop(_: DraggableEvent, data: DraggableData): void {
+    setCommentsPanelPosition({ x: data.x, y: data.y });
+  }
 
-      {/* List */}
-      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-        {visibleComments.length === 0 ? (
-          <p className="px-[16px] py-[24px] text-[12.5px] text-[var(--color-text-muted)] leading-[1.6] text-center">
-            {t('comments.panel.empty')}
-          </p>
-        ) : (
-          <ul className="py-[6px]">
-            {visibleComments.map((c, i) => (
-              <CommentItem
-                key={c.id}
-                index={i + 1}
-                comment={c}
-                onOpen={() => handleOpen(c)}
-                onRemove={() => void removeComment(c.id)}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
-    </aside>,
+  return createPortal(
+    <Draggable
+      nodeRef={nodeRef}
+      handle=".drag-handle"
+      bounds="body"
+      position={currentPosition}
+      onStop={handleDragStop}
+    >
+      <aside
+        ref={nodeRef}
+        aria-label={t('comments.panel.title', { count: visibleComments.length })}
+        style={{
+          transform: visible ? 'translateX(0)' : 'translateX(calc(100% + 24px))',
+          opacity: visible ? 1 : 0,
+          transition: 'transform 200ms ease-out, opacity 200ms ease-out',
+        }}
+        className="fixed top-[80px] right-[16px] z-40 w-[300px] flex flex-col rounded-[14px] border border-[var(--color-border-muted)] bg-[var(--color-surface-elevated)] shadow-[0_12px_40px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)] max-h-[calc(100vh-120px)] overflow-hidden"
+      >
+        {/* Header */}
+        <header className="drag-handle cursor-move flex items-center justify-between px-[16px] py-[12px] border-b border-[var(--color-border-muted)]">
+          <div className="flex items-center gap-[6px]" aria-label={t('comments.panel.dragHandle')}>
+            <GripVertical
+              className="w-[14px] h-[14px] text-[var(--color-text-muted)]"
+              aria-hidden
+            />
+            <span className="text-[13px] font-medium text-[var(--color-text-primary)]">
+              {t('comments.panel.title', { count: visibleComments.length })}
+            </span>
+            <span
+              className="text-[11px] tabular-nums text-[var(--color-text-muted)]"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              {visibleComments.length}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setInteractionMode('default')}
+            aria-label={t('comments.panel.close')}
+            className="rounded-full p-[3px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+          >
+            <X className="w-[14px] h-[14px]" aria-hidden />
+          </button>
+        </header>
+
+        {/* List */}
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+          {visibleComments.length === 0 ? (
+            <p className="px-[16px] py-[24px] text-[12.5px] text-[var(--color-text-muted)] leading-[1.6] text-center">
+              {t('comments.panel.empty')}
+            </p>
+          ) : (
+            <ul className="py-[6px]">
+              {visibleComments.map((c, i) => (
+                <CommentItem
+                  key={c.id}
+                  index={i + 1}
+                  comment={c}
+                  onOpen={() => handleOpen(c)}
+                  onRemove={() => void removeComment(c.id)}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+      </aside>
+    </Draggable>,
     document.body,
   );
 }
@@ -131,12 +156,11 @@ function CommentItem({ index, comment, onOpen, onRemove }: CommentItemProps) {
   const isApplied = isEdit && comment.status === 'applied';
   const summary = comment.text.split('\n')[0] ?? '';
 
-  // Status color — subtle dot indicator
   const statusColor = isApplied
     ? 'var(--color-text-muted)'
     : isEdit
       ? 'var(--color-accent)'
-      : '#d4a017'; // warning yellow for notes
+      : '#d4a017';
 
   return (
     <li className="group relative">
