@@ -608,7 +608,7 @@ export async function generateTitle(input: GenerateTitleInput): Promise<string> 
         ...(input.allowKeyless === true ? { allowKeyless: true } : {}),
         ...(input.reasoningLevel !== undefined ? { reasoning: input.reasoningLevel } : {}),
         ...(input.signal !== undefined ? { signal: input.signal } : {}),
-        maxTokens: 200,
+        maxTokens: 1000,
       },
       {
         logger: log,
